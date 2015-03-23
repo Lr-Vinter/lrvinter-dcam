@@ -1,0 +1,23 @@
+NODE two
+
+text
+{
+	Hello 
+}
+
+choose
+{
+
+}
+
+branches
+{
+    
+}
+
+END_NODE
+
+
+
+
+END_ALL

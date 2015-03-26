@@ -3,14 +3,6 @@
 //  LOGICAL ASSIGMENTS
 //
 
-struct b_log
-{
-    LEX_T info = {};
-    b_log* left ;
-    b_log* right;
-};
-
-
 b_log* New_tree_branch(LEX_T* get , b_log* left , b_log* right)
 {
     assert(get);
@@ -146,10 +138,12 @@ int Tree_Dump(b_log* tree)
     else if(tree->info.op_flag == AND)                 printf(" AND ");
     else if(tree->info.op_flag == VAR)                 printf(" var ");   
     else if(tree->info.op_flag == NUMBER)              printf(" %d" , tree->info.value);                               
+    else if(tree->info.op_flag == EQUAL)               printf(" EQUAL ");
     else
-    {
-        assert(!"ERROR uncorrected info");
-    }
+    {   
+        printf("flag %d\n\n" , tree->info.op_flag);
+        assert(!"ERROR uncorrected info");  
+    }         
     
     if(tree->left)    Tree_Dump(tree->left );
     if(tree->right)   Tree_Dump(tree->right);

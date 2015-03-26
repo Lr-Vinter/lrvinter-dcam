@@ -1,23 +1,47 @@
-NODE two
 
+VARS { cancer sex }
+
+
+
+LOG_NODE one
 text
 {
-	Hello 
+	Шел я по улице и встретил какого-то уебана... И тут я подумал...
 }
-
 choose
 {
-
+(a>10) ; Дать ему с вертухи в ебло ; 1
+(a<7 ) ; Пройти мимо               ; 2
 }
 
-branches
+
+branches 
 {
-    
+((c = 1) & (a = 2) & (b<3)) ; one ; a+=1;
+(c < 9)      ;  three       ;  a - = 4 ;
 }
-
 END_NODE
 
 
+
+LOG_NODE two
+text
+{
+    Шел я по улице и встретил какого-то уебана... И тут я подумал...
+}
+choose
+{
+(a>10) ; Дать ему с вертухи в ебло ; 1
+(a<7 ) ; Пройти мимо               ; 2
+}
+
+branches 
+{
+((c = 1) & (a = 2) & (b<3)) ; one ; d+=1;
+((cancer = 8) | ( x < 6) )      ;  three       ;  a - = 4 ;
+}
+
+END_NODE
 
 
 END_ALL

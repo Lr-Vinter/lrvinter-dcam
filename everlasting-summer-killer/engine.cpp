@@ -52,9 +52,28 @@ struct VAR_T
 struct TO_DO
 {
     char var_name[MAX_NAME_SIZE] = {};
+    
     int  op                      = 0;
     int  number                  = 0;
 };
+
+struct LEX_T 
+{
+    int var_num = 0;                    // vars
+    int value   = 0;                    // vars
+    char var_name[MAX_NAME_SIZE] = {};  // vars
+    
+    
+    int op_flag = 0;
+};
+
+struct b_log
+{
+    LEX_T info = {};
+    b_log* left ;
+    b_log* right;
+};
+
 
 struct CHOOSE_T
 {
@@ -78,7 +97,6 @@ struct tree_t
     BRANCH_T branches [MAX_TREE_BRANCHES] = {};
     
 };
-
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -140,21 +158,8 @@ int main()
 {
 
     LIB_T lib = {};
+    First_read("in.txt", &lib);
     
-    //First_read("temp_in.txt", &lib);
-    
-    
-    //char  input[MAX_COMMAND_SIZE] = {};
-    //LEX_T lexes[MAX_COMMAND_SIZE] = {};
-    
-    //gets(input);
-    //Get_Lex(input , lexes);
-    
-    //int lex_num = 0;
-    //b_log* tree = Get_Condition(lexes , &lex_num);
-    //Tree_Print(tree);
-    
-    //Print_lex(lexes);
 
     return 0;
 }
@@ -199,7 +204,7 @@ int Get_one_node(FILE* in , LIBRARY_T* library) //one module
     char opString[MAX_COMMAND_SIZE] = {};
     
     fscanf(in , "%s" , opString);
-    assert(strcmp(opString , "NODE") == 0);
+    assert(strcmp(opString , "LOG_NODE") == 0);
     
     fscanf(in , "%s" , opString);
     strcpy( library->node_name , opString);        
@@ -283,7 +288,6 @@ int Get_one_choose(FILE* in , LIBRARY_T* library , int step)
 {
     assert(in);
     assert(library);
-    assert(step);
     
     char opString[MAX_COMMAND_SIZE] = {};
     
@@ -291,7 +295,7 @@ int Get_one_choose(FILE* in , LIBRARY_T* library , int step)
     LEX_T lexes[MAX_COMMAND_SIZE] = {};
     
     Get_text(in , input , ';');
-    Get_Lex (input , lexes);
+    Get_Lex (input , lexes);         //WARNING   ./l,l,
     
     int lex_num = 0;
     b_log* tree = Get_Condition(lexes , &lex_num);
@@ -320,7 +324,6 @@ int Get_branches(FILE* in , LIBRARY_T* library)
 {
     assert(in);
     assert(library);
-    assert(step);
     
     char opString[MAX_COMMAND_SIZE] = {};
     
@@ -342,7 +345,6 @@ int Get_branches(FILE* in , LIBRARY_T* library)
 
 int Get_one_branch(FILE* in , LIBRARY_T* library , int  step)
 {
-    assert(step);
     assert(library);
     assert(in);
 
@@ -391,20 +393,21 @@ int Get_instruction(char input[] , LIBRARY_T* library , int step)  // может
             pointer++; 
             i      ++;
         }
-    }
+    } 
     else assert(!"NO VAR HAVE BEEN SCANFED\n");
     
     int operation_type   = Operation_A(input , &pointer);
     int value            = 0;
   
-    while(input[pointer] == ' ')  { pointer++; }
-    assert(input[pointer] == '='); 
+    while (input[pointer] == ' ')  { pointer++;}
+    assert(input[pointer] == '=');
+    
     pointer++;
     while(input[pointer] == ' ')  { pointer++; }
-
-    while(input[pointer])
+    
+    assert('0' <= input[pointer] && input[pointer] <= '9');
+    while ('0' <= input[pointer] && input[pointer] <= '9')
     {
-        assert('0' <= input[pointer] && input[pointer] <= '9');
         value  = value*10 + input[pointer] - '0';
         pointer++;
     }
@@ -416,13 +419,14 @@ int Get_instruction(char input[] , LIBRARY_T* library , int step)  // может
     return 1;
 }
 
+
 int Operation_A (char input[] , int* pointer)
 {
     for(;;)
     {
-        if(input[*pointer] == ' ')      { pointer++ ; continue;    }
-        else if(input[*pointer] == '+') { pointer++ ; return PLUS; }
-        else if(input[*pointer] == '-') { pointer++ ; return MIN ; }
+        if(input[*pointer] == ' ')      { (*pointer)++ ; continue;    }
+        else if(input[*pointer] == '+') { (*pointer)++ ; printf("PLUS was got\n"); return PLUS; }
+        else if(input[*pointer] == '-') { (*pointer)++ ; printf("MIN was got \n"); return MIN ; }
         else
         {
             assert(!"ERROR , SHOULD BE + OR - ");
@@ -502,6 +506,33 @@ int Get_Back_ifnot(FILE* in , char* string)
 
 //================================================================================================================
 
+int Get_info_text (FILE* in , LIBRARY_T* library)
+{
+    assert(in);
+    assert(library);
+    
+    char opString[MAX_COMMAND_SIZE] = {};
+    fscanf(in , "%s" , opString);
+    
+    assert(strcmp(opString , "text") == 0);
+    Space_pass   (in , '{');
+    
+    char* text = library->tree->text;
+    
+    int i = 0;
+    for(;;)
+    {
+        if(Get_Back_ifnot(in , "}") == 1) break;
+        
+        char c  = fgetc(in);
+        text[i] = c;
+        i++;
+    }
+    
+    
+    return 1;
+}
+
 
 int Vars_Dump    (LIB_T* lib)
 {
@@ -516,7 +547,7 @@ int Vars_Dump    (LIB_T* lib)
     return 1;
 }
 
-
+//---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 

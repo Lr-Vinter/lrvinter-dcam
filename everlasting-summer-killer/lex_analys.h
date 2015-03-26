@@ -3,15 +3,6 @@
 //
 // 
 //=========================================================================================================================================================
-struct LEX_T 
-{
-    int var_num = 0;                    // vars
-    int value   = 0;                    // vars
-    char var_name[MAX_NAME_SIZE] = {};  // vars
-    
-    
-    int op_flag = 0;
-};
 
 
 const int LESS    = 1;
@@ -52,15 +43,13 @@ int Get_Lex(char logical_cond[] , LEX_T lexes[] )
     int pointer  = 0;
     
     int a = 0;
-    while(logical_cond[a])
+    while(logical_cond[pointer])
     {
         
         if       (isspace(logical_cond[pointer]))                                { pointer++;                                                       }               
         else if  ('a' <= logical_cond[pointer] && logical_cond[pointer] <= 'z')  { var_analys   (logical_cond , lexes , &pointer , &lex_step    );  }
         else if  ('0' <= logical_cond[pointer] && logical_cond[pointer] <= '9')  { number_analys(logical_cond , lexes , &pointer , &lex_step    );  }
         else                                                                     { logic_symbol (logical_cond , lexes , &pointer , &lex_step    );  }
-        
-        a++;
         
     }
     
@@ -69,6 +58,7 @@ int Get_Lex(char logical_cond[] , LEX_T lexes[] )
 
 int logic_symbol  (char logical_cond[] , LEX_T lexes[] , int * pointer , int * lex_step)
 {
+    //printf("'%s' pointer %d\n", logical_cond, *pointer);
     assert(logical_cond);
     assert(lexes);
     

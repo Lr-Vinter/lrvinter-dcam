@@ -10,6 +10,7 @@ struct b_log
     b_log* right;
 };
 
+
 b_log* New_tree_branch(LEX_T* get , b_log* left , b_log* right)
 {
     assert(get);

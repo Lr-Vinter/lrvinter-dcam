@@ -1,5 +1,31 @@
+//
 // LEXICAL ANALYS
+//
+// 
+//=========================================================================================================================================================
+struct LEX_T 
+{
+    int var_num = 0;                    // vars
+    int value   = 0;                    // vars
+    char var_name[MAX_NAME_SIZE] = {};  // vars
+    
+    
+    int op_flag = 0;
+};
 
+
+const int LESS    = 1;
+const int MORE    = 2;
+const int EQUAL   = 3;
+const int OPEN    = 5;
+const int CLOSE   = 4;
+const int OR      = 6;
+const int AND     = 7;
+
+const int VAR     = 8;
+const int NUMBER  = 9;
+
+//=========================================================================================================================================================
 
 int Get_Lex       (char logical_cond[] , LEX_T lexes[] );
 
@@ -15,6 +41,8 @@ int find_num      (LIB_T* lib , char var[]);
 int Print_lex     (LEX_T lexes[]);
 
 
+//---------------------------------------------------------------------------------------------------------------------------------------------------------
+
 int Get_Lex(char logical_cond[] , LEX_T lexes[] )
 {
     assert(logical_cond);
@@ -23,22 +51,14 @@ int Get_Lex(char logical_cond[] , LEX_T lexes[] )
     int lex_step = 0;
     int pointer  = 0;
     
-    int i = 0;
-    while(logical_cond[i] != 0)
-    {
-        printf("logical_cond %d \n" , logical_cond[i]);
-        i++;
-    }
-    
     int a = 0;
-    
-    while(logical_cond[i])
+    while(logical_cond[a])
     {
         
-        if       (isspace(logical_cond[pointer]))                                {printf("space %d \n" , a); pointer++;                                                       }               
-        else if  ('a' <= logical_cond[pointer] && logical_cond[pointer] <= 'z')  {printf("var   %d \n" , a); var_analys   (logical_cond , lexes , &pointer , &lex_step    );  }
-        else if  ('0' <= logical_cond[pointer] && logical_cond[pointer] <= '9')  {printf("num   %d \n" , a); number_analys(logical_cond , lexes , &pointer , &lex_step    );  }
-        else                                                                     {printf("logic %d\n " , a); logic_symbol (logical_cond , lexes , &pointer , &lex_step    );}
+        if       (isspace(logical_cond[pointer]))                                { pointer++;                                                       }               
+        else if  ('a' <= logical_cond[pointer] && logical_cond[pointer] <= 'z')  { var_analys   (logical_cond , lexes , &pointer , &lex_step    );  }
+        else if  ('0' <= logical_cond[pointer] && logical_cond[pointer] <= '9')  { number_analys(logical_cond , lexes , &pointer , &lex_step    );  }
+        else                                                                     { logic_symbol (logical_cond , lexes , &pointer , &lex_step    );  }
         
         a++;
         
@@ -99,7 +119,7 @@ int var_analys   (char logical_cond[] , LEX_T lexes[] , int * pointer , int * le
     char var[MAX_NAME_SIZE] = {};
     
     int step = 0;
-    while('a' <= logical_cond[*pointer] && logical_cond[*pointer] <= 'z')
+    while('a' <= logical_cond[*pointer] && logical_cond[*pointer] <= 'z') 
     {
         var[step] = logical_cond[*pointer];
         (*pointer)++;
@@ -166,13 +186,17 @@ int Print_lex (LEX_T lexes[])
     assert(lexes);
     int step = 0;
     
+    printf("==============================\n");
+    printf("======This is lex dump========\n");
+    printf("==============================\n");
+    
     while(true)
     {
         if(lexes[step].op_flag == 0)                                      break;
         
-        if(LESS <= lexes[step].op_flag && lexes[step].op_flag <= AND)     printf(" operation %d \n" , lexes[step].op_flag);      
-        else if(lexes[step].op_flag == VAR)                               printf(" var %s       \n" , lexes[step].op_flag);   
-        else if(lexes[step].op_flag == NUMBER)                            printf(" number \n");                               
+        if(LESS <= lexes[step].op_flag && lexes[step].op_flag <= AND)     printf(" operation %d \n"     , lexes[step].op_flag );      
+        else if(lexes[step].op_flag == VAR)                               printf(" var %s       \n"     , lexes[step].var_name);   
+        else if(lexes[step].op_flag == NUMBER)                            printf(" number , value %d\n" , lexes[step].value);                               
         else
         {
             assert(!"ERROR");

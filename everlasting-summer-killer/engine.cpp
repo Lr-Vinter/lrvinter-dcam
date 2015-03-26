@@ -7,6 +7,7 @@
 
 const int MAX_TREE_BRANCHES = 20;
 const int MAX_TEXT_SIZE     = 300;
+const int MAX_CHOOSE_SIZE   = 100;
 
 
 //    all rights
@@ -27,6 +28,11 @@ const int MAX_VARS         = 50;
 const int MAX_LEX          = 20;
 const int MAX_LOGIC        = 3;
 
+const int PLUS             = 1;
+const int MIN              = 2;
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------
+
 struct THIS_VT
 {
     int   value               = 0;
@@ -40,18 +46,41 @@ struct VAR_T
 };
 
 
-//=========================================================================================================================================================
-//=========================================================================================================================================================
+//---------------------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+struct TO_DO
+{
+    char var_name[MAX_NAME_SIZE] = {};
+    int  op                      = 0;
+    int  number                  = 0;
+};
+
+struct CHOOSE_T
+{
+    b_log* cond_visible;
+    char   text[MAX_TEXT_SIZE] = {};
+    int    choose = 0;
+};
+
+struct BRANCH_T
+{
+    b_log* condition;
+    char   next_name[MAX_NAME_SIZE] = {};
+    TO_DO  instruction;
+};
 
 struct tree_t
 {
     char text[MAX_TEXT_SIZE];
     
-//    CHOOSE_T choise[MAX_TREE_BRANCHES] = {};
-//    BRANCH_T branches[MAX_TEXT_SIZE] = {};
+    CHOOSE_T choise   [MAX_TREE_BRANCHES] = {};
+    BRANCH_T branches [MAX_TREE_BRANCHES] = {};
     
 };
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 struct LIBRARY_T
 {
@@ -82,13 +111,16 @@ int   Get_Vars        (FILE* in , LIB_T*     lib);
 int   Get_one_node    (FILE* in , LIBRARY_T* library);
 int   Get_info        (FILE* in , LIBRARY_T* library);
 int   Get_info_text   (FILE* in , LIBRARY_T* library);
+
+// CHOOSE-BRANCH
+//
 int   Get_branches    (FILE* in , LIBRARY_T* library);
+int   Get_choose      (FILE* in , LIBRARY_T* library);
+int   Get_one_choose  (FILE* in , LIBRARY_T* library , int step);
+int   Get_one_branch  (FILE* in , LIBRARY_T* library , int step);
 
-int   Get_choose(FILE* in , LIBRARY_T* library);
-int   Get_one_choose  (FILE* in , LIBRARY_T* library , int* step);
-
-int   choose_advance (FILE* in , LIBRARY_T* library);
-char*   Get_cond_text(FILE* in , LIBRARY_T* lib); // считывает | включительно 
+int   Get_instruction(char input[] , LIBRARY_T* library , int step);
+int   Operation_A      (char input[] , int* pointer);
 
 // LEX ANALYSIS !!!!!!!!
 // 
@@ -100,11 +132,8 @@ char*   Get_cond_text(FILE* in , LIBRARY_T* lib); // считывает | вкл
 int   Get_Back_ifnot  (FILE* in , char* string);
 int   Space_pass      (FILE* in , char  next);
 int   Check_end       (FILE* in , char  next);
-char* Get_text        (FILE* in , char  stop_symbol);
+int   Get_text        (FILE* in , char* text , char  stop_symbol);
 
-
-
-int   Library_memory(LIBRARY_T library[]);
 int   Vars_Dump     (LIB_T* lib);
 
 int main()
@@ -115,17 +144,17 @@ int main()
     //First_read("temp_in.txt", &lib);
     
     
-    char  input[MAX_COMMAND_SIZE] = {};
-    LEX_T lexes[MAX_COMMAND_SIZE] = {};
+    //char  input[MAX_COMMAND_SIZE] = {};
+    //LEX_T lexes[MAX_COMMAND_SIZE] = {};
     
-    gets(input);
-    Get_Lex(input , lexes);
+    //gets(input);
+    //Get_Lex(input , lexes);
     
-    int lex_num = 0;
-    b_log* tree = Get_Condition(lexes , &lex_num);
-    Tree_Print(tree);
+    //int lex_num = 0;
+    //b_log* tree = Get_Condition(lexes , &lex_num);
+    //Tree_Print(tree);
     
-    Print_lex(lexes);
+    //Print_lex(lexes);
 
     return 0;
 }
@@ -211,7 +240,7 @@ int Get_Vars (FILE* in , LIB_T* lib)
 }
 
 //
-// MAIN GET FUNCTION , BITCHES , ATTENTION
+// MAIN GET FUNCTION
 //
 //
 
@@ -220,9 +249,9 @@ int Get_info(FILE* in , LIBRARY_T* library)  // считывает все час
     assert(in);
     assert(library);
     
-    Get_info_text  (in , library);      
+    Get_info_text  (in , library);      //  ATTENTION
     Get_choose     (in , library);      
-    // Get_branches   (in , library);   // ATTENTION
+    Get_branches   (in , library);   
     
     return 1;
 }
@@ -243,26 +272,43 @@ int Get_choose(FILE* in , LIBRARY_T* library)
     for(;;)
     {
         if(Get_Back_ifnot(in , "}") == 1) break;
-        Get_one_choose(in , library , &step);
+        Get_one_choose(in , library , step);
+        step++;
     }
 
     return 1;
 }
 
-int Get_one_choose(FILE* in , LIBRARY_T* library , int* step)
+int Get_one_choose(FILE* in , LIBRARY_T* library , int step)
 {
     assert(in);
     assert(library);
     assert(step);
     
-    Space_pass(in , '(');
+    char opString[MAX_COMMAND_SIZE] = {};
     
-    char*    logical_cond = Get_cond_text(in , library);
+    char  input[MAX_COMMAND_SIZE] = {};
+    LEX_T lexes[MAX_COMMAND_SIZE] = {};
     
-//    tree_t*  logical_tree = Get_tree(lex);
+    Get_text(in , input , ';');
+    Get_Lex (input , lexes);
     
+    int lex_num = 0;
+    b_log* tree = Get_Condition(lexes , &lex_num);
+    Tree_Print(tree);
     
-    Space_pass(in , ')');
+    library->tree->choise[step].cond_visible = tree;
+    Space_pass(in , ';');
+    
+    char* text_ptr = library->tree->choise[step].text ;
+    text_ptr = (char*) calloc(MAX_CHOOSE_SIZE , sizeof(char));
+    Get_text    (in , text_ptr , ';');
+    Space_pass  (in , ';');
+    
+    int choose_user = 0;
+    fscanf(in , "%d" , &choose_user);
+    
+    library->tree->choise[step].choose     = choose_user;
     
     return 1;
 }
@@ -270,20 +316,128 @@ int Get_one_choose(FILE* in , LIBRARY_T* library , int* step)
 //=======================================================================================================================================================
 //========================================================================================================================================================
 
-char* Get_text(FILE* in , char stop_symbol)  // считывает текст типа "я такой унылый битард блаблабла" из скри
+int Get_branches(FILE* in , LIBRARY_T* library)
+{
+    assert(in);
+    assert(library);
+    assert(step);
+    
+    char opString[MAX_COMMAND_SIZE] = {};
+    
+    fscanf(in , "%s" , opString            );
+    assert(strcmp(opString , "branches") == 0);
+    
+    Space_pass(in , '{');
+    
+    int step = 0;
+    for(;;)
+    {
+        if(Get_Back_ifnot(in , "}") == 1) break;
+        Get_one_branch(in , library , step);
+        step++;
+    }
+
+    return 1;
+}
+
+int Get_one_branch(FILE* in , LIBRARY_T* library , int  step)
+{
+    assert(step);
+    assert(library);
+    assert(in);
+
+    char opString[MAX_COMMAND_SIZE] = {};
+    
+    char  input[MAX_COMMAND_SIZE] = {};
+    LEX_T lexes[MAX_COMMAND_SIZE] = {};
+    
+    Get_text(in , input , ';');
+    Get_Lex (input , lexes);
+    
+    int lex_num = 0;
+    b_log* tree = Get_Condition(lexes , &lex_num);
+    Tree_Print(tree);
+    
+    library->tree->branches[step].condition = tree;
+    Space_pass(in , ';');
+    
+    fscanf    (in , "%s" , opString);
+    strcpy    (library->tree->branches[step].next_name , opString);
+    
+    Space_pass(in , ';');
+    
+    Get_text            (in , input , ';'       );
+    Get_instruction     (input , library ,  step);
+    Space_pass          (in ,';'                );
+    
+    return 1;
+}
+
+int Get_instruction(char input[] , LIBRARY_T* library , int step)  // может глючить  //  cancer++;
+{
+    assert(input);
+    assert(library);
+    int pointer = 0;
+    
+    char opString[MAX_COMMAND_SIZE] = {};
+    while(input[pointer] == ' ') { pointer++; }
+    
+    if('a' <= input[pointer] && input[pointer] <= 'z')
+    {
+        int i = 0;
+        while('a' <= input[pointer] && input[pointer] <= 'z')
+        {
+            opString[step] = input[pointer];
+            pointer++; 
+            i      ++;
+        }
+    }
+    else assert(!"NO VAR HAVE BEEN SCANFED\n");
+    
+    int operation_type   = Operation_A(input , &pointer);
+    int value            = 0;
+  
+    while(input[pointer] == ' ')  { pointer++; }
+    assert(input[pointer] == '='); 
+    pointer++;
+    while(input[pointer] == ' ')  { pointer++; }
+
+    while(input[pointer])
+    {
+        assert('0' <= input[pointer] && input[pointer] <= '9');
+        value  = value*10 + input[pointer] - '0';
+        pointer++;
+    }
+    
+    library->tree->branches[step].instruction.op     = operation_type;
+    library->tree->branches[step].instruction.number = value;
+    strcpy(library->tree->branches[step].instruction.var_name , opString);
+    
+    return 1;
+}
+
+int Operation_A (char input[] , int* pointer)
+{
+    for(;;)
+    {
+        if(input[*pointer] == ' ')      { pointer++ ; continue;    }
+        else if(input[*pointer] == '+') { pointer++ ; return PLUS; }
+        else if(input[*pointer] == '-') { pointer++ ; return MIN ; }
+        else
+        {
+            assert(!"ERROR , SHOULD BE + OR - ");
+        }
+    }
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+int Get_text(FILE* in , char* text , char stop_symbol)  // считывает текст типа "я такой унылый битард блаблабла" из скри
 {
     assert(in);
     
-    char* text = (char*) calloc(MAX_TEXT_SIZE , sizeof(char) );
-    
     for(int i = 0;;i++)
     {
-        
-        if( i > MAX_TEXT_SIZE)
-        {
-            printf("ERROR : TOO MUCH TEXT, IDITE NAXUI");
-        }
-        
         int offset_pointer  = ftell(in);
         char symbol         = fgetc(in);
         
@@ -292,7 +446,7 @@ char* Get_text(FILE* in , char stop_symbol)  // считывает текст т
         text[i] = symbol;
     }
     
-    return text;
+    return 1;
 }
 
 //================================================================================================================
@@ -349,7 +503,6 @@ int Get_Back_ifnot(FILE* in , char* string)
 //================================================================================================================
 
 
-
 int Vars_Dump    (LIB_T* lib)
 {
     assert(lib);
@@ -360,24 +513,6 @@ int Vars_Dump    (LIB_T* lib)
         printf("variable name %s , value %d\n\n" , lib->block.vars[i].name , lib->block.vars[i].value);
     }
     
-    return 1;
-}
-
-int Get_info_text(FILE* in , LIBRARY_T* library)
-{
-    assert(in);
-    assert(library);
-    char opString[MAX_COMMAND_SIZE] = {};
-    
-    fscanf(in , "%s" , opString);
-    assert(strcmp(opString , "text") == 0);
-    
-    Space_pass(in , '{');
-    
-    char*  string_ptr = Get_text(in , '}');
-    strcpy(library->tree->text , string_ptr);
-    
-    Space_pass(in , '}');
     return 1;
 }
 

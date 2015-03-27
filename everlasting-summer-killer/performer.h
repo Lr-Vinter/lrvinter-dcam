@@ -4,15 +4,14 @@
 //  Я аккуратно писал этот хедер , он компелируется , но я его не дебагал , поэтому функцию Tree_Complile не вызывал в main.
 //  
 
-int Tree_compile     (LIB_T* lib , int start);
-
 tree_t* Get_next_node       (LIB_T* lib , tree_t* current_tree);
 tree_t* find_tree_by_name   (LIB_T* lib , char name[]);
 tree_t* Analys_branches     (LIB_T* lib , tree_t* current_tree);
 
+int Tree_compile     (LIB_T* lib , int start);
+
 int     Make_increment      (LIB_T* lib , tree_t* current_tree);
 int     Analys_choise       (LIB_T* lib , tree_t* current_tree);
-int 	Tree_compile        (LIB_T* lib , int start);
 int 	Analys_cond         (LIB_T* lib , b_log* logical);
 int  	Get_var_or_number   (LIB_T* lib , b_log* tree);
 int 	Get_var_value       (LIB_T* lib , b_log* tree);
